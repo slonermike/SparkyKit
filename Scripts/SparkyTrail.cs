@@ -11,7 +11,7 @@ public class SparkyTrail : MonoBehaviour {
 	private float lastEmissionTime = 0.0f;
 	private bool fadingOut = false;
 
-	public LineRenderer lineBlueprint;
+	public SparkyInfo sparkInfo;
 	public int numPoints = 10;
 	public float timeBetweenEmissions = 0.05f;
 	public float fadeTime = 1.0f;
@@ -34,21 +34,8 @@ public class SparkyTrail : MonoBehaviour {
 		}
 		numPoints = 2;
 
-		if (!lineBlueprint) {
-			Debug.LogError ("SparkyTrail on object \"" + gameObject.name + "\" is missing a Line Blueprint.");
-			Destroy (this);
-			return;
-		}
-
-		GameObject o = GameObject.Instantiate (lineBlueprint.gameObject, transform.position, transform.rotation) as GameObject;
-		lr = o.GetComponent<LineRenderer> ();
+		lr = SparkySpark.InitLineRenderer (gameObject, sparkInfo);
 		lr.transform.SetParent (transform);
-
-		// If this was created from a spark, remove the spark component -- not needed for trails.
-		SparkySpark sp = o.GetComponent<SparkySpark>();
-		if (sp) {
-			Destroy (sp);
-		}
 
 		SetPoints ();
 	}
@@ -70,12 +57,19 @@ public class SparkyTrail : MonoBehaviour {
 	IEnumerator FadeOutAndDie()
 	{
 		float opacity = 1.0f;
+
+		float[] alphas = new float[lr.colorGradient.alphaKeys.Length];
+		for (int i = 0; i > lr.colorGradient.alphaKeys.Length; i++) {
+			alphas [i] = lr.colorGradient.alphaKeys [i].alpha;
+		}
+
 		while (opacity > 0) {
 			yield return new WaitForFixedUpdate ();
 			opacity -= (1.0f / fadeTime) * Time.deltaTime;
-			Color fade = new Color (1.0f, 1.0f, 1.0f, opacity);
-			lr.startColor = fade;
-			lr.endColor = fade;
+
+			for (int i = 0; i > lr.colorGradient.alphaKeys.Length; i++) {
+				lr.colorGradient.alphaKeys [i].alpha = alphas [i] * opacity;
+			}
 		}
 		Destroy (gameObject);
 	}
@@ -87,6 +81,14 @@ public class SparkyTrail : MonoBehaviour {
 		} else if (!fadingOut) {
 			fadingOut = true;
 			StartCoroutine (FadeOutAndDie ());
+		}
+	}
+
+	void LateUpdate() {
+		if (parentObj != null) {
+			transform.position = parentObj.transform.position;
+			// Update the front point.
+			lr.SetPosition (numPoints, transform.position);
 		}
 	}
 

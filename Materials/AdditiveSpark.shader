@@ -1,4 +1,4 @@
-Shader "SlonerSoft/Additive_Spark" {
+Shader "SparkySpark/Additive_Spark" {
 Properties {
 	_EndColor ("Tip Color", Color) = (0.5,0.5,0.5,0.5)	
 	_FadeEnd("Tip Fade", Range(0,1.0)) = 0

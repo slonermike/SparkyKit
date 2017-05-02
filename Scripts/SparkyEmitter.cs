@@ -6,7 +6,7 @@ public class SparkyEmitter : MonoBehaviour {
 	private float startTime;
 	private float nextEmissionTime;
 
-	public LineRenderer[] sparkPrefabs;
+	public SparkyInfo sparkInfo;
 	public float emitterLifetime = 0.0f;
 	[Range(0.0f, 360.0f)] public float emissionAngle = 360.0f;
 	public Vector2 timeBetweenEmissions = new Vector2(0.1f, 0.2f);
@@ -54,25 +54,17 @@ public class SparkyEmitter : MonoBehaviour {
 		float angle = Random.Range (-halfAngle, halfAngle);
 		Vector2 dir = Quaternion.AngleAxis (angle, Vector3.forward) * transform.right;
 
-		if (sparkPrefabs.Length == 0) {
-			Debug.LogError ("Spark emitter has no spark prefabs.  Destroying self.");
-			GameObject.Destroy (gameObject);
-			return;
-		}
-
-		GameObject original = sparkPrefabs [Random.Range (0, sparkPrefabs.Length)].gameObject;
-		GameObject newObj = Instantiate (original, transform.position, transform.rotation) as GameObject;
-		SparkySpark spark = newObj.GetComponent<SparkySpark> ();
-
-		if (spark == null) {
-			Debug.LogError ("Spark component missing from created spark.");
-			return;
-		}
+		// Create the new spark, copied from the old one!
+		GameObject o = new GameObject(name + " spark");
+		SparkySpark newSpark = o.AddComponent<SparkySpark> ();
+		newSpark.info = sparkInfo;
+		o.transform.position = transform.position;
+		o.transform.rotation = transform.rotation;
 
 		float myVel = Random.Range (startVelocityRange.x, startVelocityRange.y);
 		float myLifetime = Random.Range (sparkLifetime.x, sparkLifetime.y);
 		float myAppearTime = Random.Range (sparkAppearTime.x, sparkAppearTime.y);
 		float myDisappearTime = Random.Range (sparkDisappearTime.x, sparkDisappearTime.y);
-		spark.SetupSpark (dir * myVel, myLifetime, directionalAcceleration, drag, myAppearTime, myDisappearTime, sparkLengthMultiplier);
+		newSpark.SetupSpark (dir * myVel, myLifetime, directionalAcceleration, drag, myAppearTime, myDisappearTime, sparkLengthMultiplier);
 	}
 }

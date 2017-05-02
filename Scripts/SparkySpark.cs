@@ -1,7 +1,35 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[System.Serializable]
+public class SparkyInfo {
+
+	public SparkyInfo()
+	{
+	}
+
+	public SparkyInfo(SparkyInfo src) {
+		this.width = src.width;
+		this.taper = src.taper;
+		this.trailColor = src.trailColor;
+		this.lineMaterial = src.lineMaterial;
+	}
+
+	public float width = 0.1f;
+
+	[Range(-1f,1f)]
+	[Tooltip("0 = no taper, 1 = taper to zero tail, -1 = taper to zero tip")]
+	public float taper = 0.0f;
+
+	[Tooltip("Left is tail, right is tip.")]
+	public Gradient trailColor;
+
+	public Material lineMaterial;
+}
+
 public class SparkySpark : MonoBehaviour {
+
+	public SparkyInfo info;
 
 	private float lifetime;
 	private Vector2 velocity;
@@ -13,11 +41,46 @@ public class SparkySpark : MonoBehaviour {
 	private float appearTime = 0.0f;
 	private float disappearTime = 0.0f;
 
+	// Copy the instance values into the line renderer.
+	//
+	// TODO: we can probably just create the line renderer here.
+	//
+	public static LineRenderer InitLineRenderer(GameObject onObj, SparkyInfo info)
+	{
+		LineRenderer lr = onObj.AddComponent<LineRenderer> ();
+
+		if (lr == null) {
+			Debug.LogError ("LineRenderer already exists on SparkyKit object: " + onObj.name);
+			lr = onObj.GetComponent<LineRenderer> ();
+		}
+
+		lr.positionCount = 2;
+		lr.colorGradient = info.trailColor;
+
+		if (info.lineMaterial == null) {
+			Debug.LogError ("No material provided for SparkyKit object: " + onObj);
+		} else {
+			lr.material = new Material (info.lineMaterial);
+		}
+
+		lr.startWidth = info.width;
+		lr.endWidth = info.width;
+
+		// TODO: These are backwards.  Fix it!
+		if (info.taper > 0) {
+			lr.startWidth = lr.endWidth * (1f - info.taper);
+		} else if (info.taper < 0) {
+			lr.endWidth = lr.startWidth * (1f + info.taper);
+		}
+
+		return lr;
+	}
+
 	public void SetupSpark(Vector2 vel, float life_sec, Vector2 accelVec, float linearDrag, float _appearTime, float _disappearTime, float lengthMult) {
+		lr = InitLineRenderer (gameObject, info);
 		velocity = vel;
 		acceleration = accelVec;
 		lifetime = life_sec;
-		lr = GetComponent<LineRenderer> ();
 		drag = linearDrag;
 		lengthPerVel = lengthMult;
 
