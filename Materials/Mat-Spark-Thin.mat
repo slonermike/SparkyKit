@@ -27,7 +27,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _CoreCoef: 0.22
-    - _FadeEnd: 0.18
+    - _FadeEnd: 0.2
     - _FadeLevel: 0.23
     - _FadeStart: 0.89
     - _HighlightStrength: 0.51
