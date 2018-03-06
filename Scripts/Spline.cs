@@ -105,6 +105,55 @@ namespace Slonersoft {
 			index = Mathf.Clamp(index, 0, controlPoints.Length-1);
 			return Evaluate(index, u);
 		}
+
+		public static Spline GeneratePath(Vector3 start, Vector3 finish, int numPasses = 1, float curveSpreadX = 0.5f, float curveSpreadY = 0.5f)
+		{
+			Vector3[] primaryCurvePoints = new Vector3[2];
+			primaryCurvePoints [0] = start;
+			primaryCurvePoints [1] = finish;
+			Spline curve = new Spline (primaryCurvePoints);
+
+			float length = Vector3.Distance (start, finish);
+			if (length == 0f) {
+				return curve;
+			}
+
+			Vector3 pathNormalized = finish - start;
+			pathNormalized /= length;
+
+			float rightDot = Mathf.Abs(Vector3.Dot (pathNormalized, Vector3.right));
+			float upDot = Mathf.Abs(Vector3.Dot (pathNormalized, Vector3.up));
+
+			Vector3 rVec = rightDot < upDot ? Vector3.right : Vector3.up;
+			Vector3 fVec = Vector3.Cross (pathNormalized, rVec);
+
+			int midPoints = 0;
+
+			for (int i = 0; i < numPasses; i++) {
+				midPoints += (midPoints + 1);
+				int totalPoints = midPoints + 2;
+				Vector3[] newPoints = new Vector3[totalPoints];
+				newPoints [0] = start;
+				newPoints [newPoints.Length-1] = finish;
+
+				float segmentSize = length / (float)(midPoints + 1);
+
+				Vector2 primaryCurveSpread = new Vector2(segmentSize * curveSpreadX, segmentSize * curveSpreadY);
+
+				for (int j = 1; j < newPoints.Length-1; j++) {
+					float pct = j / (float)(newPoints.Length - 1);
+					Vector3 centerPoint = curve.Evaluate (pct);
+					centerPoint += rVec * Random.Range (-primaryCurveSpread.x, primaryCurveSpread.x);
+					centerPoint += fVec * Random.Range (-primaryCurveSpread.y, primaryCurveSpread.y);;
+					newPoints [j] = centerPoint;
+				}
+
+				curve = new Spline (newPoints);
+				curve.tension = 0.5f;
+			}
+
+			return curve;
+		}
 	}
 }
 

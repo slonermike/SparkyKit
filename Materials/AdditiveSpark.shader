@@ -7,6 +7,7 @@ Properties {
 	_HighlightColor("Highlight Color",Color) = (1,1,1,1)
 	_HighlightStrength ("Highlight Strength", Range(0.0,1.0)) = 0.5	
 	_MainTex ("Texture", 2D) = "white" {}
+	_Overglow ("Overglow", Range(0,1.0)) = 0
 }
 
 Category {
@@ -33,6 +34,7 @@ Category {
 			half _HighlightStrength;
 			half _FadeEnd;
 			half _FadeStart;
+			half _Overglow;
 			
 			struct appdata_t {
 				float4 vertex : POSITION;
@@ -65,7 +67,7 @@ Category {
 				float4 c = tex2D(_MainTex, i.texcoord);
 				half fadeCoef = saturate((1-i.texcoord.x)/_FadeEnd) * saturate((i.texcoord.x)/_FadeStart);
 				float4 col = i.color * lerp(lerp(_StartColor,_EndColor,i.texcoord.x),_HighlightColor,_HighlightStrength * c.r) * c * 2.0f;
-				c = fadeCoef * (col);
+				c = fadeCoef * (col) * (1.0 + _Overglow);
 				return c;
 			}
 			ENDCG 
